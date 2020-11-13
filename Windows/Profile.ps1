@@ -20,6 +20,8 @@ function update-all {
     Start-Process ms-windows-store://downloadsandupdates
     Write-Output "WSL update ..."
     wsl sudo apt update && wsl sudo apt upgrade
+    Write-Output "Git update ..."
+    git update-git-for-windows
 }
 
 
