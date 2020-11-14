@@ -24,5 +24,13 @@ function update-all {
     git update-git-for-windows
 }
 
+function Delete_hidden {
+       Remove-Item /s /q /f /a .DS_STORE
+       Remove-Item /s /q /f /a:h ._*
+   Write-Output "Delete success"
+}
+
+
+
 
 
