@@ -2,7 +2,7 @@ Import-Module PSReadLine
 Import-Module posh-git
 Import-Module oh-my-posh
 Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
-Enter-VsDevShell fffa5013
+Enter-VsDevShell fffa5013 | Out-Null
 Set-Theme Paradox
 
 # 设置 tab 为菜单补全和 Intellisense
