@@ -35,7 +35,7 @@ function Update-All {
     Start-Process ms-settings:windowsupdate-action
     Start-Process ms-windows-store://downloadsandupdates
     Write-Output "WSL update ..."
-    wsl sudo apt update && wsl sudo apt upgrade
+    wsl sudo apt update '&&' sudo apt upgrade
     Write-Output "Git update ..."
     git update-git-for-windows
     Write-Output "Powershell module update"
