@@ -71,4 +71,11 @@ function calculator {
     ipython -c "from math import *; from numpy import *; from scipy import *; from sympy import *"
 }
 
-functi
+function Update-VC-env {
+    Start-Process powershell.exe -ArgumentList "-NoProfile -File C:\Users\90834\Documents\Utilities\Windows\Update-VC-env.ps1" `
+    -UseNewEnvironment -Wait -NoNewWindow
+}
+
+
+
+
