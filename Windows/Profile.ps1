@@ -1,17 +1,25 @@
+#Set VC env
+#Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+#Enter-VsDevShell -VsInstallPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community" `
+#-DevCmdArguments "-arch=x64 -host_arch=x64" -SkipAutomaticLocation | Out-Null
+foreach($_ in Get-Content -Path C:\Users\90834\Documents\env.txt) 
+{ if ($_ -match '^([^=]+)=(.*)') 
+{ [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2]) } }
+
+#set python env
+New-Alias -Name python3 -Value py.exe
+New-Alias -Name python -Value py.exe
+
+#Set autocompletion
 Import-Module PSReadLine
 Import-Module posh-git
 Import-Module oh-my-posh
-Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
-Enter-VsDevShell fffa5013 | Out-Null
-Set-Theme Paradox
+Set-PoshPrompt jandedobbeleer
+#Set-PoshPrompt aliens
 
-# 设置 tab 为菜单补全和 Intellisense
+#Set-PSReadlineOption -EditMode vi
 Set-PSReadLineKeyHandler -Key "Tab" -Function MenuComplete
-
-# 设置向上键为后向搜索历史记录
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
-
-# 设置向下键为前向搜索历史纪录
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 
 #Edit Hosts
@@ -22,10 +30,10 @@ Function Edit-Hosts {
 
 function Update-All {
     Start-Job -Name "Visual Studio update"{
-        &"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" update `
+        &"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer" update `
             --quiet --installpath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community" }
     Start-Job -Name "office update"{
-        &"C:\Program Files\Common Files\microsoft shared\ClickToRun\OfficeC2RClient.exe" `
+        &"C:\Program Files\Common Files\microsoft shared\ClickToRun\OfficeC2RClient" `
             /update user displaylevel=false forceappshutdown=true }
     Start-Job -Name "vcpkg update"{ 
         if (Set-Location "F:\vcpkg\vcpkg") {
@@ -59,7 +67,8 @@ function Update-PowerShell {
     Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -UseMSI"
 }
 
+function calculator {
+    ipython -c "from math import *; from numpy import *; from scipy import *; from sympy import *"
+}
 
-
-
-
+functi
