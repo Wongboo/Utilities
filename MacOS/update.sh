@@ -18,7 +18,7 @@ if [ -n "$1" ] && [ "$1" != "notex" ]; then
         sudo tlmgr update --all
     fi
     echo zsh upgrade ...
-    env ZSH="$ZSH" sh "$ZSH/tools/upgrade.sh"
+    #env ZSH="$ZSH" sh "$ZSH/tools/upgrade.sh"
     git -C ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k pull
     echo mac app store upgrade ...
     mas outdated && mas upgrade
