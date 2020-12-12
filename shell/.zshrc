@@ -152,7 +152,7 @@ export CMAKE_PREFIX_PATH="/usr/local/opt/qt"
 
 #alias
 alias pip="pip3"
-alias calculator="ipython -i -c \"from numpy import *\" \"from math import *\" \"from scipy import *\" \"from sympy import *\""
+alias calculator="ipython -i -c \"from numpy import *\" \"from math import *\" \"from scipy import *,linalg\" \"from sympy import *\""
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
