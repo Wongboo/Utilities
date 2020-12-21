@@ -146,7 +146,7 @@ _fix_cursor() {
 precmd_functions+=(_fix_cursor)
 
 #ENVIRONMENT VARIABLES
-export PATH="/usr/local/opt/qt/bin:$PATH"
+export PATH="/usr/local/opt/qt/bin:/usr/local/sbin:$PATH"
 export EDITOR="code -w"
 export CMAKE_PREFIX_PATH="/usr/local/opt/qt"
 
