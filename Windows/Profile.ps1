@@ -100,4 +100,13 @@ Function Update-PowerShell {
 }
 #>
 Function Calculator {
-    python -c "from IPython import embed; embed();from math import *; from numpy import 
+    python -c "from IPython import embed; embed(); from math import *; from numpy import *; from scipy import *; from sympy import *"
+}
+Function Update-VC-env {
+    Start-Process powershell.exe -UseNewEnvironment -Wait -NoNewWindow `
+        -ArgumentList "-NoProfile -File C:\Users\90834\Documents\Utilities\Windows\Update-VC-env.ps1"
+    .$Psfile
+}
+Function Set-HTTP-Proxy {
+    $env:HTTP_PROXY = $env:HTTPS_PROXY = "http://127.0.0.1:1080"
+}
