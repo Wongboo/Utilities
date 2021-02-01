@@ -39,12 +39,23 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
 }
 
 #Set autocompletion
-Import-Module PSReadLine
 Import-Module posh-git
 Import-Module oh-my-posh
 Set-PoshPrompt jandedobbeleer
 
-Set-PSReadLineKeyHandler -Key "Tab" -Function MenuComplete
+Import-Module PSReadLine
+Function OnViModeChange {
+    if ($args[0] -eq 'Command') {
+        # Set the cursor to a blinking block.
+        Write-Host -NoNewLine "`e[1 q"
+    }
+    else {    
+        # Set the cursor to a blinking line.
+        Write-Host -NoNewLine "`e[5 q"
+    }
+}
+Set-PSReadLineOption -EditMode Vi -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
+Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 #Edit Hosts
@@ -52,7 +63,7 @@ Function Edit-Hosts {
     Start-Process code -ArgumentList $env:windir\System32\drivers\etc\hosts -Wait -NoNewWindow
     ipconfig /flushdns | Out-Null
 }
-function Update-All {
+Function Update-All {
     if ($args.Count -eq 0) {
         Start-Job -Name "Visual Studio update" {
             & $env:VSINSTALLDIR\..\..\Installer\vs_installer.exe update `
@@ -62,13 +73,13 @@ function Update-All {
                 /update user displaylevel=false forceappshutdown=true }
     }
     if (Test-Path F:\) {
-        git -C "F:\vcpkg\vcpkg" pull | Out-Null
+        git -C "F:\vcpkg\vcpkg" pull #| Out-Null
         vcpkg update
     } 
     Start-Process ms-settings:windowsupdate-action
     Start-Process ms-windows-store://downloadsandupdates
     Write-Output "Powershell module update"
-    Update-Module 
+    Update-Module && Update-Module -Name oh-my-posh -Scope CurrentUser -AllowPrerelease  
     Write-Output "pip update"
     Update-Pip
     <#
@@ -80,19 +91,13 @@ function Update-All {
     rustup self update && rustup update
     #>
 }
-function Remove-DS-Store {
-    Get-ChildItem . -r -include ._* -force | remove-item -r -force
-    Get-ChildItem . -r -include .DS_Store -force | remove-item -r -force
-    Write-Output "Delete success"
+Function Remove-DS-Store {
+    Get-ChildItem . -Recurse -Include ._*, .DS_Store  -Force | Remove-Item -Force -Verbose
 }
 <#
-function Update-PowerShell {
+Function Update-PowerShell {
     Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -UseMSI"
 }
 #>
-function Calculator {
-    ipython -c "from math import *; from numpy import *; from scipy import *; from sympy import *"
-}
-function Update-VC-env {
-    Start-Process powershell.exe -UseNewEnvironment -Wait -NoNewWindow `
-      
+Function Calculator {
+    python -c "from IPython import embed; embed();from math import *; from numpy import 
