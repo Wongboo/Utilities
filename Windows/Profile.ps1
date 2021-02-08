@@ -1,13 +1,13 @@
-$Psfile = "C:\Users\90834\Documents\PowerShell\Profile.ps1"
+$Psfile = "~\Documents\PowerShell\Profile.ps1"
 <#
 Set VC env
 Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
 Enter-VsDevShell -VsInstallPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community" `
 -DevCmdArguments "-arch=x64 -host_arch=x64" -SkipAutomaticLocation | Out-Null
 #>
-foreach ($_ in Get-Content -Path C:\Users\90834\Documents\env.txt) {
-    if ($_ -match '^([^=]+)=(.*)') 
-    { [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2]) } 
+foreach ($_ in Get-Content -Path ~\Documents\env.txt) {
+    if ($_ -match '^([^=]+)=(.*)')
+    { [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2]) }
 }
 if (Test-Path F:\) {
     Import-Module 'F:\vcpkg\vcpkg\scripts\posh-vcpkg'
@@ -16,8 +16,8 @@ if (Test-Path F:\) {
 #Set python env
 Set-Alias -Name python3 -Value py.exe
 Set-Alias -Name python -Value py.exe
-Function pip { python -m pip $args }
-Function ipython { python -c "from IPython import embed; embed()" }
+#Function pip {py -m pip $args}
+#Function ipython {py -c "from ipython import embed; embed();" $args}
 Function Update-Pip {
     $a = pip list --outdated
     $num_package = $a.Length - 2
@@ -25,7 +25,7 @@ Function Update-Pip {
         $tmp = ($a[2 + $i].Split(" "))[0]
         pip install -U $tmp
     }
-} 
+}
 
 #Set winget autocompletion
 Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
@@ -49,7 +49,7 @@ Function OnViModeChange {
         # Set the cursor to a blinking block.
         Write-Host -NoNewLine "`e[1 q"
     }
-    else {    
+    else {
         # Set the cursor to a blinking line.
         Write-Host -NoNewLine "`e[5 q"
     }
@@ -75,11 +75,11 @@ Function Update-All {
     if (Test-Path F:\) {
         git -C "F:\vcpkg\vcpkg" pull #| Out-Null
         vcpkg update
-    } 
+    }
     Start-Process ms-settings:windowsupdate-action
     Start-Process ms-windows-store://downloadsandupdates
     Write-Output "Powershell module update"
-    Update-Module && Update-Module -Name oh-my-posh -Scope CurrentUser -AllowPrerelease  
+    Set-HTTP-Proxy && Update-Module && Update-Module -Name oh-my-posh -Scope CurrentUser -AllowPrerelease
     Write-Output "pip update"
     Update-Pip
     <#
@@ -100,13 +100,20 @@ Function Update-PowerShell {
 }
 #>
 Function Calculator {
-    python -c "from IPython import embed; embed(); from math import *; from numpy import *; from scipy import *; from sympy import *"
+    ipython -c "from math import *; from numpy import *; from scipy import *; from sympy import *"
 }
 Function Update-VC-env {
     Start-Process powershell.exe -UseNewEnvironment -Wait -NoNewWindow `
-        -ArgumentList "-NoProfile -File C:\Users\90834\Documents\Utilities\Windows\Update-VC-env.ps1"
+        -ArgumentList "-NoProfile -File ~\Documents\Utilities\Windows\Update-VC-env.ps1"
     .$Psfile
 }
 Function Set-HTTP-Proxy {
     $env:HTTP_PROXY = $env:HTTPS_PROXY = "http://127.0.0.1:1080"
+}
+Function Get-GNU-Date {
+    #需要中文locale
+    $str = (Get-Date -Format "yyyy年MM月dd日 dddd HH时mm分ss秒 CST").ToCharArray()
+    if ($str[5] -eq '0') { $str[5] = ' ' }
+    if ($str[8] -eq '0') { $str[8] = ' ' }
+    [string]::Concat($str)
 }
