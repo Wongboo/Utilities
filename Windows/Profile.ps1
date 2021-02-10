@@ -1,8 +1,5 @@
 #Set python env
 #Set-Alias -Name python3 -Value py.exe
-#Set-Alias -Name python -Value py.exe
-#Function pip {py -m pip $args}
-#Function ipython {py -c "from ipython import embed; embed();" $args}
 Function Update-Pip {
     $a = pip list --outdated
     $num_package = $a.Length - 2
