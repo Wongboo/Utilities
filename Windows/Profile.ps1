@@ -1,11 +1,11 @@
-$Psfile = "~\Documents\PowerShell\Profile.ps1"
+$Psfile = "$HOME\Documents\PowerShell\Profile.ps1"
 <#
 Set VC env
 Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
 Enter-VsDevShell -VsInstallPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community" `
 -DevCmdArguments "-arch=x64 -host_arch=x64" -SkipAutomaticLocation | Out-Null
 #>
-foreach ($_ in Get-Content -Path ~\Documents\env.txt) {
+foreach ($_ in Get-Content -Path $HOME\Documents\env.txt) {
     if ($_ -match '^([^=]+)=(.*)')
     { [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2]) }
 }
@@ -65,16 +65,12 @@ Function Edit-Hosts {
 }
 Function Update-All {
     if ($args.Count -eq 0) {
-        Start-Job -Name "Visual Studio update" {
+        <#Start-Job -Name "Visual Studio update" {
             & $env:VSINSTALLDIR\..\..\Installer\vs_installer.exe update `
-                --quiet --installpath $env:VSINSTALLDIR }
+                --quiet --installpath $env:VSINSTALLDIR }#>
         Start-Job -Name "office update" {
             &"C:\Program Files\Common Files\microsoft shared\ClickToRun\OfficeC2RClient" `
                 /update user displaylevel=false forceappshutdown=true }
-    }
-    if (Test-Path F:\) {
-        git -C "F:\vcpkg\vcpkg" pull #| Out-Null
-        vcpkg update
     }
     Start-Process ms-settings:windowsupdate-action
     Start-Process ms-windows-store://downloadsandupdates
@@ -90,6 +86,13 @@ Function Update-All {
     Write-Output "Rust update"
     rustup self update && rustup update
     #>
+    if (Test-Path F:\) {
+        Write-Output "vcpkg update"
+        git -C "F:\vcpkg\vcpkg" pull #| Out-Null
+        vcpkg update
+        Write-Output "texlive update"
+        tlmgr update --self && tlmgr update --all
+    }
 }
 Function Remove-DS-Store {
     Get-ChildItem . -Recurse -Include ._*, .DS_Store  -Force | Remove-Item -Force -Verbose
@@ -104,7 +107,7 @@ Function Calculator {
 }
 Function Update-VC-env {
     Start-Process powershell.exe -UseNewEnvironment -Wait -NoNewWindow `
-        -ArgumentList "-NoProfile -File ~\Documents\Utilities\Windows\Update-VC-env.ps1"
+        -ArgumentList "-NoProfile -File $HOME\Documents\Utilities\Windows\Update-VC-env.ps1"
     .$Psfile
 }
 Function Set-HTTP-Proxy {
