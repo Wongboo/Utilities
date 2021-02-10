@@ -1,5 +1,4 @@
 #Set python env
-#Set-Alias -Name python3 -Value py.exe
 Function Update-Pip {
     $a = pip list --outdated
     $num_package = $a.Length - 2
