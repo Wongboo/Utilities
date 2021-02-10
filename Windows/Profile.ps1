@@ -8,7 +8,7 @@ Function Update-Pip {
     }
 }
 
-#Set winget autocompletion
+#Set autocompletion
 Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
     [Console]::InputEncoding = [Console]::OutputEncoding = $OutputEncoding = [System.Text.Utf8Encoding]::new()
@@ -18,13 +18,7 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }
-
-#set vcpkg autocompletion
-if (Test-Path F:\) {
-    Import-Module 'F:\vcpkg\vcpkg\scripts\posh-vcpkg'
-}
-
-#Set autocompletion
+if (Test-Path F:\) { Import-Module 'F:\vcpkg\vcpkg\scripts\posh-vcpkg' }
 Import-Module posh-git
 Import-Module oh-my-posh
 Set-PoshPrompt jandedobbeleer
@@ -45,7 +39,6 @@ Set-PSReadLineOption -EditMode Vi -ViModeIndicator Script -ViModeChangeHandler $
 Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
-#Edit Hosts
 Function Edit-Hosts {
     Start-Process code -ArgumentList $env:windir\System32\drivers\etc\hosts -Wait -NoNewWindow
     ipconfig /flushdns | Out-Null
@@ -69,14 +62,6 @@ Function Update-All {
         Write-Output "texlive update"
         tlmgr update --self && tlmgr update --all
     }
-    <#
-    Write-Output "WSL update ..."
-    wsl sudo apt update '&&' sudo apt upgrade
-    Write-Output "Git update ..."
-    git update-git-for-windows
-    Write-Output "Rust update"
-    rustup self update && rustup update
-    #>
 }
 Function Remove-DS-Store {
     Get-ChildItem . -Recurse -Include ._*, .DS_Store  -Force | Remove-Item -Force -Verbose
@@ -120,4 +105,10 @@ foreach ($_ in Get-Content -Path $HOME\Documents\env.txt) {
     if ($_ -match '^([^=]+)=(.*)')
     { [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2]) }
 }
+    Write-Output "WSL update ..."
+    wsl sudo apt update '&&' sudo apt upgrade
+    Write-Output "Git update ..."
+    git update-git-for-windows
+    Write-Output "Rust update"
+    rustup self update && rustup update
 #>
