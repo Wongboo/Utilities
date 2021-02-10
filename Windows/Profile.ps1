@@ -39,8 +39,9 @@ Set-PSReadLineOption -EditMode Vi -ViModeIndicator Script -ViModeChangeHandler $
 Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+
 Function Edit-Hosts {
-    Start-Process code -ArgumentList $env:windir\System32\drivers\etc\hosts -Wait -NoNewWindow
+    code $env:windir\System32\drivers\etc\hosts --wait
     ipconfig /flushdns | Out-Null
 }
 Function Update-All {
