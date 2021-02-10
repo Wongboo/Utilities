@@ -1,21 +1,6 @@
-$Psfile = "$HOME\Documents\PowerShell\Profile.ps1"
-<#
-Set VC env
-Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
-Enter-VsDevShell -VsInstallPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community" `
--DevCmdArguments "-arch=x64 -host_arch=x64" -SkipAutomaticLocation | Out-Null
-#>
-foreach ($_ in Get-Content -Path $HOME\Documents\env.txt) {
-    if ($_ -match '^([^=]+)=(.*)')
-    { [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2]) }
-}
-if (Test-Path F:\) {
-    Import-Module 'F:\vcpkg\vcpkg\scripts\posh-vcpkg'
-}
-
 #Set python env
-Set-Alias -Name python3 -Value py.exe
-Set-Alias -Name python -Value py.exe
+#Set-Alias -Name python3 -Value py.exe
+#Set-Alias -Name python -Value py.exe
 #Function pip {py -m pip $args}
 #Function ipython {py -c "from ipython import embed; embed();" $args}
 Function Update-Pip {
@@ -38,11 +23,17 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
     }
 }
 
+#set vcpkg autocompletion
+if (Test-Path F:\) {
+    Import-Module 'F:\vcpkg\vcpkg\scripts\posh-vcpkg'
+}
+
 #Set autocompletion
 Import-Module posh-git
 Import-Module oh-my-posh
 Set-PoshPrompt jandedobbeleer
 
+#Set readline
 Import-Module PSReadLine
 Function OnViModeChange {
     if ($args[0] -eq 'Command') {
@@ -65,9 +56,6 @@ Function Edit-Hosts {
 }
 Function Update-All {
     if ($args.Count -eq 0) {
-        <#Start-Job -Name "Visual Studio update" {
-            & $env:VSINSTALLDIR\..\..\Installer\vs_installer.exe update `
-                --quiet --installpath $env:VSINSTALLDIR }#>
         Start-Job -Name "office update" {
             &"C:\Program Files\Common Files\microsoft shared\ClickToRun\OfficeC2RClient" `
                 /update user displaylevel=false forceappshutdown=true }
@@ -78,6 +66,13 @@ Function Update-All {
     Set-HTTP-Proxy && Update-Module && Update-Module -Name oh-my-posh -Scope CurrentUser -AllowPrerelease
     Write-Output "pip update"
     Update-Pip
+    if (Test-Path F:\) {
+        Write-Output "vcpkg update"
+        git -C "F:\vcpkg\vcpkg" pull #| Out-Null
+        vcpkg update
+        Write-Output "texlive update"
+        tlmgr update --self && tlmgr update --all
+    }
     <#
     Write-Output "WSL update ..."
     wsl sudo apt update '&&' sudo apt upgrade
@@ -86,29 +81,12 @@ Function Update-All {
     Write-Output "Rust update"
     rustup self update && rustup update
     #>
-    if (Test-Path F:\) {
-        Write-Output "vcpkg update"
-        git -C "F:\vcpkg\vcpkg" pull #| Out-Null
-        vcpkg update
-        Write-Output "texlive update"
-        tlmgr update --self && tlmgr update --all
-    }
 }
 Function Remove-DS-Store {
     Get-ChildItem . -Recurse -Include ._*, .DS_Store  -Force | Remove-Item -Force -Verbose
 }
-<#
-Function Update-PowerShell {
-    Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -UseMSI"
-}
-#>
 Function Calculator {
     ipython -c "from math import *; from numpy import *; from scipy import *; from sympy import *"
-}
-Function Update-VC-env {
-    Start-Process powershell.exe -UseNewEnvironment -Wait -NoNewWindow `
-        -ArgumentList "-NoProfile -File $HOME\Documents\Utilities\Windows\Update-VC-env.ps1"
-    .$Psfile
 }
 Function Set-HTTP-Proxy {
     $env:HTTP_PROXY = $env:HTTPS_PROXY = "http://127.0.0.1:1080"
@@ -120,3 +98,30 @@ Function Get-GNU-Date {
     if ($str[8] -eq '0') { $str[8] = ' ' }
     [string]::Concat($str)
 }
+Function Set-VC-env {
+    Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+    Enter-VsDevShell -VsInstallPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community" `
+        -DevCmdArguments "-arch=x64 -host_arch=x64" -SkipAutomaticLocation | Out-Null 
+}
+<#
+Function Update-PowerShell {
+    Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -UseMSI"
+}
+Function Update-VC-env {
+    Start-Process powershell.exe -UseNewEnvironment -Wait -NoNewWindow `
+        -ArgumentList "-NoProfile -File $HOME\Documents\Utilities\Windows\Update-VC-env.ps1"
+    .$Psfile
+    #cmd /c " @call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat`" && SET" |
+    #Where-Object {($_ -match '^([^=]+)=(.*)') -and ([System.Environment]::GetEnvironmentVariable($matches[1]) -ne $matches[2])}|
+    #Out-File -FilePath ~\Documents\env.txt
+}
+Function Update-Visual-Studio {
+    Start-Job -Name "Visual Studio update" {
+        & $env:VSINSTALLDIR\..\..\Installer\vs_installer.exe update `
+            --installpath $env:VSINSTALLDIR }
+}
+foreach ($_ in Get-Content -Path $HOME\Documents\env.txt) {
+    if ($_ -match '^([^=]+)=(.*)')
+    { [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2]) }
+}
+#>
