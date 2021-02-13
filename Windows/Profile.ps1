@@ -28,11 +28,11 @@ Import-Module PSReadLine
 Function OnViModeChange {
     if ($args[0] -eq 'Command') {
         # Set the cursor to a blinking block.
-        Write-Host -NoNewLine "`e[1 q"
+        Write-Host -NoNewline "`e[1 q"
     }
     else {
         # Set the cursor to a blinking line.
-        Write-Host -NoNewLine "`e[5 q"
+        Write-Host -NoNewline "`e[5 q"
     }
 }
 Set-PSReadLineOption -EditMode Vi -ViModeIndicator Script -ViModeChangeHandler $Function:OnViModeChange
@@ -42,7 +42,7 @@ Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 
 Function Edit-Hosts {
     code $env:windir\System32\drivers\etc\hosts --wait
-    ipconfig /flushdns | Out-Null
+    Clear-DnsClientCache | Out-Null
 }
 Function Update-All {
     if ($args.Count -eq 0) {
@@ -53,7 +53,7 @@ Function Update-All {
     Start-Process ms-settings:windowsupdate-action
     Start-Process ms-windows-store://downloadsandupdates
     Write-Output "Powershell module update"
-    Set-HTTP-Proxy && Update-Module && Update-Module -Name oh-my-posh -Scope CurrentUser -AllowPrerelease
+    Update-Module && Update-Module -Name oh-my-posh -Scope CurrentUser -AllowPrerelease
     Write-Output "pip update"
     Update-Pip
     if (Test-Path F:\) {
@@ -61,20 +61,20 @@ Function Update-All {
         git -C "F:\vcpkg\vcpkg" pull #| Out-Null
         vcpkg update
         Write-Output "texlive update"
-        tlmgr update --self && tlmgr update --all
+        tlmgr update --self --all
     }
 }
 Function Remove-DS-Store {
-    Get-ChildItem . -Recurse -Include ._*, .DS_Store  -Force | Remove-Item -Force -Verbose
+    Get-ChildItem $args -Recurse -Include ._*, .DS_Store -Force | Remove-Item -Force -Verbose
 }
 Function Calculator {
-    ipython -c "from math import *; from numpy import *; from scipy import *; from sympy import *"
+    ipython -c "from math import *; from numpy import *; from scipy import *; from sympy import *" $args
 }
 Function Set-HTTP-Proxy {
-    $env:HTTP_PROXY = $env:HTTPS_PROXY = "http://127.0.0.1:1080"
+    $env:HTTP_PROXY = $env:HTTPS_PROXY = $args.Count -eq 0 ? "http://127.0.0.1:10809" : $args[0]
 }
 Function Get-GNU-Date {
-    #需要中文locale
+    #need chinese locale
     $str = (Get-Date -Format "yyyy年MM月dd日 dddd HH时mm分ss秒 CST").ToCharArray()
     if ($str[5] -eq '0') { $str[5] = ' ' }
     if ($str[8] -eq '0') { $str[8] = ' ' }
@@ -83,7 +83,19 @@ Function Get-GNU-Date {
 Function Set-VC-env {
     Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
     Enter-VsDevShell -VsInstallPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community" `
-        -DevCmdArguments "-arch=x64 -host_arch=x64" -SkipAutomaticLocation | Out-Null 
+        -DevCmdArguments "-arch=x64 -host_arch=x64" -SkipAutomaticLocation
+}
+Function Get-ChildSize {
+    $ans = Get-ChildItem $args
+    foreach ($FileOrFolder in $ans) {
+        if ($FileOrFolder.Attributes -contains "Directory") {
+            $Length = (Get-ChildItem $FileOrFolder -Recurse | Measure-Object -Sum Length).Sum
+            $FileOrFolder | Select-Object Mode, LastWriteTime, @{Name = "Length"; Expression = { $Length } }, Name
+        }
+        else {
+            $FileOrFolder | Select-Object Mode, LastWriteTime, Length, Name
+        }
+    }
 }
 <#
 Function Update-PowerShell {
