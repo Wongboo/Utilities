@@ -84,18 +84,12 @@ Function Get-ChildSize {
     ForEach-Object -Parallel {
         #Onedrive is a reparsepoint, but not a symlink, if you want to onedrive passes
         #we can change this to $_.Linktype -eq "Junction","Symlink"
-        if ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
-            $LengthOrTarget = $_.Target
+        try {   
+            $LengthOrTarget = $_.Attributes -band [System.IO.FileAttributes]::ReparsePoint ? $_.Target :
+            -not ($_.Attributes -band [System.IO.FileAttributes]::Directory) ? $_.Length:
+            (Get-ChildItem $_ -Recurse -Force -File -ErrorAction:Stop | Measure-Object -Sum Length).Sum 
         }
-        elseif ($_.Attributes -band [System.IO.FileAttributes]::Directory) {
-            try {
-                $LengthOrTarget = (Get-ChildItem $_ -Recurse -Force -File -ErrorAction:Stop | Measure-Object -Sum Length).Sum
-            }
-            catch { $LengthOrTarget = $Error[0] }  
-        }
-        else {
-            $LengthOrTarget = $_.Target
-        }
+        catch { $LengthOrTarget = $Error[0] }
         $_ | Select-Object Mode, LastWriteTime, @{Name = "LengthOrTarget"; Expression = { $LengthOrTarget } }, Name
     }
 }
