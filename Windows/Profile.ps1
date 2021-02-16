@@ -1,11 +1,6 @@
 #Set python env
 Function Update-Pip {
-    $a = pip list --outdated
-    $num_package = $a.Length - 2
-    for ($i = 0; $i -lt $num_package; $i++) {
-        $tmp = ($a[2 + $i].Split(" "))[0]
-        pip install -U $tmp
-    }
+    pip list --outdated | Select-Object -Skip 2 | ForEach-Object { pip install -U $_.Remove($_.IndexOf(' ')) }
 }
 
 #Set autocompletion
@@ -41,8 +36,7 @@ Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 
 Function Edit-Hosts {
-    code $env:windir\System32\drivers\etc\hosts --wait
-    Clear-DnsClientCache | Out-Null
+    code $env:windir\System32\drivers\etc\hosts --wait && Clear-DnsClientCache | Out-Null
 }
 Function Update-All {
     if ($args.Count -eq 0) {
@@ -78,7 +72,7 @@ Function Get-GNU-Date {
     $str = (Get-Date -Format "yyyy年MM月dd日 dddd HH时mm分ss秒 CST").ToCharArray()
     if ($str[5] -eq '0') { $str[5] = ' ' }
     if ($str[8] -eq '0') { $str[8] = ' ' }
-    [string]::Concat($str)
+    -join $str
 }
 Function Set-VC-env {
     Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
@@ -86,21 +80,29 @@ Function Set-VC-env {
         -DevCmdArguments "-arch=x64 -host_arch=x64" -SkipAutomaticLocation
 }
 Function Get-ChildSize {
-    $ans = Get-ChildItem $args
-    foreach ($FileOrFolder in $ans) {
-        if ($FileOrFolder.Attributes -contains "Directory") {
-            $Length = (Get-ChildItem $FileOrFolder -Recurse | Measure-Object -Sum Length).Sum
-            $FileOrFolder | Select-Object Mode, LastWriteTime, @{Name = "Length"; Expression = { $Length } }, Name
+    Get-ChildItem $args -Force |
+    ForEach-Object -Parallel {
+        #Onedrive is a reparsepoint, but not a symlink, if you want to onedrive passes
+        #we can change this to $_.Linktype -eq "Junction","Symlink"
+        if ($_.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+            $LengthOrTarget = $_.Target
+        }
+        elseif ($_.Attributes -band [System.IO.FileAttributes]::Directory) {
+            try {
+                $LengthOrTarget = (Get-ChildItem $_ -Recurse -Force -File -ErrorAction:Stop | Measure-Object -Sum Length).Sum
+            }
+            catch { $LengthOrTarget = $Error[0] }  
         }
         else {
-            $FileOrFolder | Select-Object Mode, LastWriteTime, Length, Name
+            $LengthOrTarget = $_.Target
         }
+        $_ | Select-Object Mode, LastWriteTime, @{Name = "LengthOrTarget"; Expression = { $LengthOrTarget } }, Name
     }
 }
-<#
 Function Update-PowerShell {
-    Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -UseMSI"
+    Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -UseMSI -Preview"
 }
+<#
 Function Update-VC-env {
     Start-Process powershell.exe -UseNewEnvironment -Wait -NoNewWindow `
         -ArgumentList "-NoProfile -File $HOME\Documents\Utilities\Windows\Update-VC-env.ps1"
