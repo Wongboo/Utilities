@@ -79,6 +79,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
     git
+    vi-mode
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -121,34 +122,15 @@ if type brew &>/dev/null; then
 export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
 
 #key binding section
-# Activate vim mode.
-bindkey -v
-
-#Change cursor shape for different vi modes.
-function zle-keymap-select {
-  if [[ ${KEYMAP} == vicmd ]] ||
-      [[ $1 = 'block' ]]; then
-    echo -ne '\e[1 q'
-
-  elif [[ ${KEYMAP} == main ]] ||
-        [[ ${KEYMAP} == viins ]] ||
-        [[ ${KEYMAP} = '' ]] ||
-        [[ $1 = 'beam' ]]; then
-    echo -ne '\e[5 q'
-  fi
-}
-zle -N zle-keymap-select
-
-# Use beam shape cursor for each new prompt.
-_fix_cursor() {
-    echo -ne '\e[5 q'
-}
-precmd_functions+=(_fix_cursor)
+VI_MODE_SET_CURSOR=true
 
 #ENVIRONMENT VARIABLES
 export PATH="/usr/local/opt/qt/bin:/usr/local/sbin:$PATH"
+export CPATH="/usr/local/include"
+export LIBRARY_PATH="/usr/local/lib"
 export EDITOR="code -w"
 export CMAKE_PREFIX_PATH="/usr/local/opt/qt"
+export LC_ALL=$LANG
 
 #alias
 alias pip="pip3"

@@ -20,10 +20,6 @@ if [ -n "$1" ] && [ "$1" != "notex" ]; then
     echo zsh upgrade ...
     #env ZSH="$ZSH" sh "$ZSH/tools/upgrade.sh"
     git -C ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k pull
-    echo mac app store upgrade ...
-    mas outdated && mas upgrade
-    echo microsoft update ...
-    '/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate' -i
 fi
 
 # update

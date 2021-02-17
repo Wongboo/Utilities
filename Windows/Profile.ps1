@@ -61,9 +61,9 @@ Function Remove-DS-Store {
     Get-ChildItem -Recurse -Include ._*, .DS_Store -Force | Remove-Item @args
 }
 Function Calculator {
-    ipython -c "from math import *; from numpy import *; from scipy import *; from sympy import *" @args
+    ipython -i -c "from math import *; from numpy import *; from scipy import *; from sympy import *" @args
 }
-Function set-HTTP-Proxy([string]$Server = "http://127.0.0.1:10809") {
+Function set-HTTP-Proxy([string]$Server = "http://127.0.0.1:1087") {
     $env:HTTP_PROXY = $env:HTTPS_PROXY = $Server
 }
 Function Get-GNU-Date {
