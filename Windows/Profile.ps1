@@ -35,7 +35,6 @@ Set-PSReadLineOption -EditMode Vi -ViModeIndicator Script -ViModeChangeHandler $
 Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
-if ($env:TERM_PROGRAM -ceq "vscode") { Write-Host -NoNewline "`e[5 q" } 
 
 Function Edit-Hosts {
     code $env:windir\System32\drivers\etc\hosts --wait && Clear-DnsClientCache | Out-Null
@@ -47,7 +46,7 @@ Function Update-All {
     Start-Process ms-settings:windowsupdate-action
     Start-Process ms-windows-store://downloadsandupdates
     Write-Output "powershell module升级"
-    Update-Module && Update-Module -Name oh-my-posh -Scope CurrentUser -AllowPrerelease
+    Update-Module
     Write-Output "pip升级"
     Update-Pip
     if (Test-Path F:\) {
@@ -84,10 +83,10 @@ Function Get-ChildSize {
     ForEach-Object -Parallel {
         #Onedrive为reparsepoint，却非symlink，若需改
         #改之为$_.Linktype -ceq "Junction","SymLink?"
-        try {   
+        try {
             $LengthOrTarget = $_.Attributes -band [System.IO.FileAttributes]::ReparsePoint ? $_.Target :
             -not ($_.Attributes -band [System.IO.FileAttributes]::Directory) ? $_.Length:
-            (Get-ChildItem $_ -Recurse -Force -File -ErrorAction Stop | Measure-Object -Sum Length).Sum 
+            (Get-ChildItem $_ -Recurse -Force -File -ErrorAction Stop | Measure-Object -Sum Length).Sum
         }
         catch [System.UnauthorizedAccessException] { $LengthOrTarget = "`e[31mAccess Denied" }
         $_ | Select-Object Mode, LastWriteTime, @{Name = "LengthOrTarget"; Expression = { $LengthOrTarget } }, Name
