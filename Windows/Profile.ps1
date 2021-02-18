@@ -55,6 +55,8 @@ Function Update-All {
         vcpkg update
         Write-Output "texlive升级"
         tlmgr update --self --all
+        Write-Output "WSL升级 ..."
+        wsl sudo apt update '&&' sudo apt upgrade
     }
 }
 Function Remove-DS-Store {
@@ -113,8 +115,6 @@ foreach ($_ in Get-Content -Path $HOME\Documents\env.txt) {
     if ($_ -match '^([^=]+)=(.*)')
     { [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2]) }
 }
-    Write-Output "WSL升级 ..."
-    wsl sudo apt update '&&' sudo apt upgrade
     Write-Output "Git升级 ..."
     git update-git-for-windows
     Write-Output "Rust升级"
