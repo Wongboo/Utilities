@@ -1,4 +1,4 @@
-#不要用shouldprocess
+#不要用ShouldProcess
 #设置python环境
 Function Update-Pip {
     pip list --outdated | Select-Object -Skip 2 | ForEach-Object { pip install -U $_.Remove($_.IndexOf(' ')) }
