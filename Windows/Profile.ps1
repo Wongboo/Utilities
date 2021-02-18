@@ -65,8 +65,9 @@ Function Remove-DS-Store {
 Function Calculator {
     ipython -i -c "from math import *; from numpy import *; from scipy import *; from sympy import *" @args
 }
-Function set-HTTP-Proxy([string]$Server = "http://127.0.0.1:1087") {
-    $env:HTTP_PROXY = $env:HTTPS_PROXY = $Server
+#若要重置，只需 set-HTTP-Proxy $null
+Function set-HTTP-Proxy($Server = "http://127.0.0.1:1087") {
+    $env:ALL_PROXY = $env:HTTP_PROXY = $env:HTTPS_PROXY = $Server
 }
 Function Get-GNU-Date {
     #需要中文locale

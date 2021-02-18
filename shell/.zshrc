@@ -118,6 +118,9 @@ if type brew &>/dev/null; then
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
 #set homebrew bottle
 export HOMEBREW_BOTTLE_DOMAIN=https://mirrors.ustc.edu.cn/homebrew-bottles
 
@@ -131,10 +134,16 @@ export LIBRARY_PATH="/usr/local/lib"
 export EDITOR="code -w"
 export CMAKE_PREFIX_PATH="/usr/local/opt/qt"
 export LC_ALL=$LANG
+export host_ip=127.0.0.1
 
 #alias
-alias pip="pip3"
 alias calculator="ipython -i -c \"from numpy import *\" \"from math import *\" \"from scipy import *,linalg\" \"from sympy import *\""
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+alias proxy='
+    export https_proxy="socks5://${host_ip}:1086";
+    export http_proxy="socks5://${host_ip}:1086";
+    export all_proxy="socks5://${host_ip}:1086";
+'
+alias unproxy='
+    unset https_proxy;
+    unset http_proxy;
+    unset all_proxy;
