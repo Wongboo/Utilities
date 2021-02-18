@@ -65,7 +65,7 @@ Function Calculator {
 }
 #重置用Set-HTTP-Proxy $null
 Function Set-HTTP-Proxy($Server = "socks5://127.0.0.1:1086") {
-    $env:HTTP_PROXY = $env:HTTPS_PROXY = $Server
+    $env:ALL_PROXY = $env:HTTP_PROXY = $env:HTTPS_PROXY = $Server
 }
 Function Get-GNU-Date {
     #需要中文locale
