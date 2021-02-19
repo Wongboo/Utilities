@@ -5,6 +5,7 @@ Function Update-Pip {
 }
 
 #设置自动补全
+#以下用于winget
 Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
     [Console]::InputEncoding = [Console]::OutputEncoding = $OutputEncoding = [System.Text.UTF8Encoding]::new()
@@ -14,6 +15,7 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
         [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
     }
 }
+#以下用于vcpkg
 if (Test-Path F:\) { Import-Module 'F:\vcpkg\vcpkg\scripts\posh-vcpkg' }
 Import-Module posh-git
 Import-Module oh-my-posh
@@ -21,6 +23,7 @@ Set-PoshPrompt jandedobbeleer
 
 #设置PSreadline
 Import-Module PSReadLine
+#设置option是为了vi-mode
 Function OnViModeChange {
     if ($args[0] -ceq 'Command') {
         #Set the cursor to a blinking block.
@@ -60,6 +63,7 @@ Function Update-All {
         wsl sudo apt update '&&' sudo apt upgrade
     }
 }
+#MacOS残留的.DS_Store, ._*可以用该函数删除
 Function Remove-DS-Store {
     Get-ChildItem -Recurse -Include ._*, .DS_Store -Force | Remove-Item @args
 }
@@ -77,7 +81,6 @@ Function Set-Proxy {
         [string]$ProxyType
     )
 
-    $Server = ""
     switch -Exact ($ProxyType) {
         "SockS5" { $Server = "socks5://127.0.0.1:1086" }
         "HTTP" { $Server = "http://127.0.0.1:1087" }
@@ -96,6 +99,7 @@ Function Set-VC-env {
     Enter-VsDevShell -VsInstallPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community" `
         -DevCmdArguments "-arch=x64 -host_arch=x64" -SkipAutomaticLocation
 }
+#解决Get-Childitem不能获知文件夹大小的问题
 Function Get-ChildSize {
     Get-ChildItem @args -Force |
     ForEach-Object -Parallel {
