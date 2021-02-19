@@ -7,7 +7,7 @@ Function Update-Pip {
 #设置自动补全
 Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
     param($wordToComplete, $commandAst, $cursorPosition)
-    [Console]::InputEncoding = [Console]::OutputEncoding = $OutputEncoding = [System.Text.Utf8Encoding]::new()
+    [Console]::InputEncoding = [Console]::OutputEncoding = $OutputEncoding = [System.Text.UTF8Encoding]::new()
     $Local:word = $wordToComplete.Replace('"', '""')
     $Local:ast = $commandAst.ToString().Replace('"', '""')
     winget complete --word="$Local:word" --commandline "$Local:ast" --position $cursorPosition | ForEach-Object {
@@ -40,7 +40,7 @@ Function Edit-Hosts {
     code $env:windir\System32\drivers\etc\hosts --wait && Clear-DnsClientCache | Out-Null
 }
 Function Update-All {
-    Set-HTTP-Proxy -ProxyType Unset
+    Set-Proxy -ProxyType Unset
     Start-Job -Name "office升级" {
         &"C:\Program Files\Common Files\microsoft shared\ClickToRun\OfficeC2RClient" `
             /update user displaylevel=false forceappshutdown=true }
@@ -66,7 +66,7 @@ Function Remove-DS-Store {
 Function Calculator {
     ipython -i -c "from math import *; from numpy import *; from scipy import *; from sympy import *" @args
 }
-Function Set-HTTP-Proxy {
+Function Set-Proxy {
     [CmdletBinding(DefaultParameterSetName = 'Server')]
     param (
         [Parameter(Mandatory = $true, ParameterSetName = 'Server', Position = 0)]
@@ -117,7 +117,7 @@ Function Update-PowerShell {
 }
 <#
 Function Update-VC-env {
-    Start-Process powershell.exe -UseNewEnvironment -Wait -NoNewWindow `
+    Start-Process pwsh.exe -UseNewEnvironment -Wait -NoNewWindow `
         -ArgumentList "-NoProfile -File $HOME\Documents\Utilities\Windows\Update-VC-env.ps1"
     .$Psfile
     #cmd /c " @call `"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat`" && SET" |
