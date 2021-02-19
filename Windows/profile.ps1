@@ -40,21 +40,24 @@ Function Edit-Hosts {
     code $env:windir\System32\drivers\etc\hosts --wait && Clear-DnsClientCache | Out-Null
 }
 Function Update-All {
+    Set-HTTP-Proxy $null
     Start-Job -Name "office升级" {
         &"C:\Program Files\Common Files\microsoft shared\ClickToRun\OfficeC2RClient" `
             /update user displaylevel=false forceappshutdown=true }
     Start-Process ms-settings:windowsupdate-action
     Start-Process ms-windows-store://downloadsandupdates
-    Write-Output "powershell module升级"
-    Update-Module
-    Write-Output "pip升级"
+    Write-Host "powershell module升级"
+    Update-Module -Proxy "http://127.0.0.1:1087"
+    Write-Host "pip升级"
     Update-Pip
     if (Test-Path F:\) {
-        Write-Output "vcpkg升级"
+        Write-Host "vcpkg升级"
         git -C "F:\vcpkg\vcpkg" pull #| Out-Null
         vcpkg update
-        Write-Output "texlive升级"
+        Write-Host "texlive升级"
         tlmgr update --self --all
+        Write-Host "WSL升级 ..."
+        wsl sudo apt update '&&' sudo apt upgrade
     }
 }
 Function Remove-DS-Store {
@@ -64,7 +67,22 @@ Function Calculator {
     ipython -i -c "from math import *; from numpy import *; from scipy import *; from sympy import *" @args
 }
 #重置用Set-HTTP-Proxy $null
-Function Set-HTTP-Proxy($Server = "socks5://127.0.0.1:1086") {
+Function Set-HTTP-Proxy {
+    [CmdletBinding(DefaultParameterSetName = 'Server')]
+    param (
+        [Parameter(Mandatory = $true, ParameterSetName = 'Server', Position = 0)]
+        [string]$Server,
+
+        [Parameter(Mandatory = $true, ParameterSetName = 'ProxyType')]
+        [ValidateSet("SockS5", "HTTP", "Unset")]
+        [string]$ProxyType
+    )
+
+    $Server = ""
+    switch -Exact ($ProxyType) {
+        "SockS5" { $Server = "socks5://127.0.0.1:1086" }
+        "HTTP" { $Server = "http://127.0.0.1:1087" }
+    }
     $env:ALL_PROXY = $env:HTTP_PROXY = $env:HTTPS_PROXY = $Server
 }
 Function Get-GNU-Date {
@@ -84,12 +102,14 @@ Function Get-ChildSize {
     ForEach-Object -Parallel {
         #Onedrive为reparsepoint，却非symlink，若需改
         #改之为$_.Linktype -ceq "Junction","SymLink?"
+        $LengthOrTarget = ""
         try {
             $LengthOrTarget = $_.Attributes -band [System.IO.FileAttributes]::ReparsePoint ? $_.Target :
             -not ($_.Attributes -band [System.IO.FileAttributes]::Directory) ? $_.Length:
             (Get-ChildItem $_ -Recurse -Force -File -ErrorAction Stop | Measure-Object -Sum Length).Sum
         }
         catch [System.UnauthorizedAccessException] { $LengthOrTarget = "`e[31mAccess Denied" }
+        
         $_ | Select-Object Mode, LastWriteTime, @{Name = "LengthOrTarget"; Expression = { $LengthOrTarget } }, Name
     }
 }
@@ -114,10 +134,8 @@ foreach ($_ in Get-Content -Path $HOME\Documents\env.txt) {
     if ($_ -match '^([^=]+)=(.*)')
     { [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2]) }
 }
-    Write-Output "WSL升级 ..."
-    wsl sudo apt update '&&' sudo apt upgrade
-    Write-Output "Git升级 ..."
+    Write-Host "Git升级 ..."
     git update-git-for-windows
-    Write-Output "Rust升级"
+    Write-Host "Rust升级"
     rustup self update && rustup update
 #>
