@@ -40,7 +40,7 @@ Function Edit-Hosts {
     code $env:windir\System32\drivers\etc\hosts --wait && Clear-DnsClientCache | Out-Null
 }
 Function Update-All {
-    Set-HTTP-Proxy $null
+    Set-HTTP-Proxy -ProxyType Unset
     Start-Job -Name "office升级" {
         &"C:\Program Files\Common Files\microsoft shared\ClickToRun\OfficeC2RClient" `
             /update user displaylevel=false forceappshutdown=true }
@@ -66,7 +66,6 @@ Function Remove-DS-Store {
 Function Calculator {
     ipython -i -c "from math import *; from numpy import *; from scipy import *; from sympy import *" @args
 }
-#重置用Set-HTTP-Proxy $null
 Function Set-HTTP-Proxy {
     [CmdletBinding(DefaultParameterSetName = 'Server')]
     param (
