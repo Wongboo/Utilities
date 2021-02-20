@@ -17,8 +17,7 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
 }
 #以下用于vcpkg
 if (Test-Path F:\) { Import-Module 'F:\vcpkg\vcpkg\scripts\posh-vcpkg' }
-Import-Module posh-git
-Import-Module oh-my-posh
+Import-Module posh-git, oh-my-posh
 Set-PoshPrompt jandedobbeleer
 
 #设置PSreadline
@@ -60,7 +59,7 @@ Function Update-All {
         Write-Host "texlive升级"
         tlmgr update --self --all
         Write-Host "WSL升级 ..."
-        wsl sudo apt update '&&' sudo apt upgrade
+        wsl update
     }
 }
 #MacOS残留的.DS_Store, ._*可以用该函数删除
@@ -73,8 +72,8 @@ Function Calculator {
 Function Set-Proxy {
     [CmdletBinding(DefaultParameterSetName = 'Server')]
     param (
-        [Parameter(Mandatory = $true, ParameterSetName = 'Server', Position = 0)]
-        [string]$Server,
+        [Parameter(ParameterSetName = 'Server', Position = 0)]
+        [string]$Server = "socks5://127.0.0.1:1086",
 
         [Parameter(Mandatory = $true, ParameterSetName = 'ProxyType')]
         [ValidateSet("SockS5", "HTTP", "Unset")]
@@ -82,8 +81,8 @@ Function Set-Proxy {
     )
 
     switch -Exact ($ProxyType) {
-        "SockS5" { $Server = "socks5://127.0.0.1:1086" }
         "HTTP" { $Server = "http://127.0.0.1:1087" }
+        "Unset" { $Server = "" }
     }
     $env:ALL_PROXY = $env:HTTP_PROXY = $env:HTTPS_PROXY = $Server
 }
