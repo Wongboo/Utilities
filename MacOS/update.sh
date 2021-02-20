@@ -15,7 +15,7 @@ if [ -n "$1" ] && [ "$1" != "notex" ]; then
     pip3 list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1  | xargs -n1 pip3 install -U
     if [ "$2" != "notex" ]; then
         echo tex upgrade ...
-        sudo tlmgr update --all
+        sudo tlmgr update --all --self
     fi
     echo zsh upgrade ...
     #env ZSH="$ZSH" sh "$ZSH/tools/upgrade.sh"
