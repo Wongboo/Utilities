@@ -1,7 +1,7 @@
 #不要用ShouldProcess
 #设置python环境
 Function Update-Pip {
-    pip list --outdated | Select-Object -Skip 2 | ForEach-Object { pip install -U $_.Remove($_.IndexOf(' ')) }
+    pip list --outdated | Select-Object -Skip 2 | ForEach-Object { pip install -U $_.Remove($_.IndexOf([char]' ')) }
 }
 
 #设置自动补全
@@ -18,7 +18,7 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
 #以下用于vcpkg
 if (Test-Path F:\) { Import-Module 'F:\vcpkg\vcpkg\scripts\posh-vcpkg' }
 Import-Module posh-git, oh-my-posh
-Set-PoshPrompt jandedobbeleer
+Set-PoshPrompt -Theme $HOME\.oh-my-posh.omp.json
 
 #设置PSreadline
 Import-Module PSReadLine
@@ -38,8 +38,32 @@ Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 
+$HostsFile = "$env:windir\System32\drivers\etc\hosts"
 Function Edit-Hosts {
-    code $env:windir\System32\drivers\etc\hosts --wait && Clear-DnsClientCache | Out-Null
+    code $HostsFile --wait && Clear-DnsClientCache | Out-Null
+}
+function Get-Host ([string]$URL) {
+    $HTML = (curl -L "https://www.ipaddress.com/search/$URL") | Out-String
+    $Start = $HTML.IndexOf("ipv4/") + 5
+    $Length = $HTML.IndexOf([char]'\', $Start) - $Start
+    return $HTML.Substring($Start, $Length)
+}
+Function Update-Hosts {
+    #需要Administrator
+    If (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+        Write-Output "Need Root" && return
+    }
+    $Content = Get-Content $HostsFile | ForEach-Object {
+        $SplitComment = $_.Split([char]"#", 2)
+        $URL = $SplitComment[0].Split([char[]](32, 9), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
+        if ($URL -and $URL -cne "localhost") {
+            (Get-Host $URL).PadLeft(12) + " `t" + $URL + $SplitComment[1] ? "#$SplitComment[1]" : ""
+        }
+        else {
+            $_
+        }
+    }
+    Set-Content $HostsFile $Content && Clear-DnsClientCache | Out-Null
 }
 Function Update-All {
     Set-Proxy -ProxyType Unset
@@ -64,7 +88,7 @@ Function Update-All {
 }
 #MacOS残留的.DS_Store, ._*可以用该函数删除
 Function Remove-DS-Store {
-    Get-ChildItem -Recurse -Include ._*, .DS_Store -Force | Remove-Item @args
+    Get-ChildItem -Recurse -Include ._*, .DS_Store -Force @args | Remove-Item -Force
 }
 Function Calculator {
     ipython -i -c "from math import *; from numpy import *; from scipy import *; from sympy import *" @args
@@ -110,7 +134,9 @@ Function Get-ChildSize {
             -not ($_.Attributes -band [System.IO.FileAttributes]::Directory) ? $_.Length:
             (Get-ChildItem $_ -Recurse -Force -File -ErrorAction Stop | Measure-Object -Sum Length).Sum
         }
-        catch [System.UnauthorizedAccessException] { $LengthOrTarget = "`e[31mAccess Denied" }
+        catch [System.UnauthorizedAccessException] {
+            $LengthOrTarget = "`e[31mAccess Denied" 
+        }
         
         $_ | Select-Object Mode, LastWriteTime, @{Name = "LengthOrTarget"; Expression = { $LengthOrTarget } }, Name
     }
