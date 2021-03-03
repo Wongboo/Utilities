@@ -144,6 +144,11 @@ Function Get-ChildSize {
 Function Update-PowerShell {
     Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -UseMSI -Preview"
 }
+Function Remove-OutdatedModule{
+    Get-ChildItem "$env:HOME\Documents\PowerShell\Modules\" | ForEach-Object {
+        Get-ChildItem $_ | Sort-Object {[version]$_.Name} -Descending | Select-Object -Skip 1 | Remove-Item -Force -Recurse
+    }
+}
 <#
 Function Update-VC-env {
     Start-Process pwsh.exe -UseNewEnvironment -Wait -NoNewWindow `
