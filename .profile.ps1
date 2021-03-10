@@ -1,7 +1,7 @@
 #不要用ShouldProcess
 #设置python环境
 Function Update-Pip {
-    pip list --outdated | Select-Object -Skip 2 | ForEach-Object { pip install -U $_.Remove($_.IndexOf([char]' ')) }
+    pip list --outdated | Select-Object -Skip 2 | ForEach-Object { pip install -U $_.Split([char]' ', 2)[0] }
 }
 
 Import-Module posh-git, oh-my-posh
@@ -25,30 +25,50 @@ Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
 Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
 Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
 Write-Host -NoNewline "`e[5 q"
+#.NET
+# PowerShell parameter completion shim for the dotnet CLI
+Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
+    param($commandName, $wordToComplete, $cursorPosition)
+        dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object {
+           [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+        }
+}
 
 Function Edit-Hosts {
     code $HostsFile --wait && Clear-DnsClientCache | Out-Null
 }
-function Get-Host ([string]$URL) {
+function Get-Hosts ([string]$URL) {
     $HTML = (curl -L "https://www.ipaddress.com/search/$URL") | Out-String
+    if (-not $?) {
+        throw "Curl错误"
+    }
     $Start = $HTML.IndexOf("ipv4/") + 5
     $Length = $HTML.IndexOf([char]'\', $Start) - $Start
     return $HTML.Substring($Start, $Length)
 }
-Function Update-Hosts {
+Function Update-Hosts ([switch]$OutVariable) {
     #需要Administrator
-    If (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    If (-not $OutVariable -and -not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
         Write-Output "Need Root" && return
     }
     $Content = Get-Content $HostsFile | ForEach-Object {
-        $SplitComment = $_.Split([char]"#", 2)
-        $URL = $SplitComment[0].Split([char[]](32, 9), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
-        if ($URL -and $URL -cne "localhost") {
-            (Get-Host $URL).PadLeft(12) + " `t" + $URL + $SplitComment[1] ? "#$SplitComment[1]" : ""
+        $Line = $_
+        $SplitComment = $Line.Split([char]"#", 2)
+        $URL = $SplitComment[0].Split([char[]](" ", "`t"), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
+        if ($URL -and $URL -cmatch "host") {
+            try{
+            (Get-Hosts $URL).PadLeft(12) + " `t" + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
+            }
+            catch [System.Management.Automation.ErrorRecord] {
+                Write-Output "Curl错误：$URL" ; $Line
+            }
         }
         else {
-            $_
+            $Line
         }
+    }
+    if ($OutVariable) {
+        return $Content
     }
     Set-Content $HostsFile $Content && Clear-DnsClientCache | Out-Null
 }
@@ -96,17 +116,18 @@ Function Get-ChildSize {
             (Get-ChildItem $_ -Recurse -Force -File -ErrorAction Stop | Measure-Object -Sum Length).Sum
         }
         catch [System.UnauthorizedAccessException] {
-            $LengthOrTarget = "`e[31mAccess Denied" 
+            $LengthOrTarget = "`e[31mAccess Denied"
         }
-        
         $_ | Select-Object Mode, LastWriteTime, @{Name = "LengthOrTarget"; Expression = { $LengthOrTarget } }, Name
     }
 }
 Function Update-PowerShell {
-    Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -Preview $($IsWindows ? '-UseMSI' : '')" 
+    Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -Preview$($IsWindows ? ' -UseMSI' : '')"
 }
-Function Remove-OutdatedModule{
+Function Remove-OutdatedModule {
+    [CmdletBinding(SupportsShouldProcess)]
+    param()
     Get-ChildItem $env:PSModulePath.Split([char]($IsWindows ? ';' : ':'), 2)[0] | ForEach-Object {
-        Get-ChildItem $_ | Sort-Object {[version]$_.Name} -Descending | Select-Object -Skip 1 | Remove-Item -Force -Recurse
+        Get-ChildItem $_ | Sort-Object { [version]$_.Name } -Descending | Select-Object -Skip 1 | Remove-Item -Force -Recurse
     }
 }
