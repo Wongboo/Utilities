@@ -38,12 +38,12 @@ Function Edit-Hosts {
     code $HostsFile --wait && Clear-DnsClientCache | Out-Null
 }
 function Get-Hosts ([string]$URL) {
-    $HTML = (curl -L "https://www.ipaddress.com/search/$URL") | Out-String
+    $HTML = (curl -L --silent "https://www.ipaddress.com/search/$URL") | Out-String
     if (-not $?) {
         throw "Curl错误"
     }
     $Start = $HTML.IndexOf("ipv4/") + 5
-    $Length = $HTML.IndexOf([char]'\', $Start) - $Start
+    $Length = $HTML.IndexOfAny([char[]]('\', '"'), $Start) - $Start
     return $HTML.Substring($Start, $Length)
 }
 Function Update-Hosts ([switch]$OutVariable) {
@@ -55,9 +55,9 @@ Function Update-Hosts ([switch]$OutVariable) {
         $Line = $_
         $SplitComment = $Line.Split([char]"#", 2)
         $URL = $SplitComment[0].Split([char[]](" ", "`t"), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
-        if ($URL -and $URL -cmatch "host") {
+        if ($URL -and $URL -cnotmatch "host") {
             try{
-            (Get-Hosts $URL).PadLeft(12) + " `t" + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
+            (Get-Hosts $URL).PadLeft(16) + " `t" + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
             }
             catch [System.Management.Automation.ErrorRecord] {
                 Write-Output "Curl错误：$URL" ; $Line
