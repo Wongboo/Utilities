@@ -57,7 +57,7 @@ Function Update-Hosts ([switch]$OutVariable) {
         $URL = $SplitComment[0].Split([char[]](" ", "`t"), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
         if ($URL -and $URL -cnotmatch "host") {
             try{
-            (Get-Hosts $URL).PadLeft(16) + " `t" + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
+            (Get-Hosts $URL).PadLeft(15) + "    " + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
             }
             catch [System.Management.Automation.ErrorRecord] {
                 Write-Output "Curl错误：$URL" ; $Line

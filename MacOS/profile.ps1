@@ -12,3 +12,8 @@ Function Get-BrewDeps {
     $l = $s | ForEach-Object { $_.Split(':', 2)[1].Split(' ') | ForEach-Object { $_ } } | Select-Object -Unique
     $t | ForEach-Object { if (-not $l.Contains($_)) { $_ } } 
 }
+Function Update-All([switch]$NoDownload, [switch]$NoSudo){
+    Write-Output "brew升级"
+    brew update 
+    
+}
