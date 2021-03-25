@@ -15,5 +15,17 @@ Function Get-BrewDeps {
 Function Update-All([switch]$NoDownload, [switch]$NoSudo){
     Write-Output "brew升级"
     brew update 
-    
+}
+Function Update-tlmgr-fonts {
+    sudo tlmgr conf texmf OSFONTDIR (Get-ChildItem (Get-Item /System/Library/Assets*) *Font*)
+}
+
+Function Get-Elevate-Command ($Command){
+    if ($env:USER -eq "root"){
+        return $false
+    }
+    else{
+        sudo pwsh-preview -c "$Command"
+        return $true
+    }
 }

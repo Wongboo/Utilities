@@ -48,9 +48,10 @@ function Get-Hosts ([string]$URL) {
 }
 Function Update-Hosts ([switch]$OutVariable) {
     #需要Administrator
-    If (-not $OutVariable -and -not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        Write-Output "Need Root" && return
+    If (-not $OutVariable -and (Get-Elevate-Command "Update-Hosts")){
+        return
     }
+
     $Content = Get-Content $HostsFile | ForEach-Object {
         $Line = $_
         $SplitComment = $Line.Split([char]"#", 2)
@@ -67,10 +68,13 @@ Function Update-Hosts ([switch]$OutVariable) {
             $Line
         }
     }
+
     if ($OutVariable) {
         return $Content
     }
-    Set-Content $HostsFile $Content && Clear-DnsClientCache | Out-Null
+    
+    Set-Content $HostsFile $Content
+    Clear-DnsClientCache | Out-Null
 }
 #MacOS残留的.DS_Store, ._*可以用该函数删除
 Function Remove-DS-Store {

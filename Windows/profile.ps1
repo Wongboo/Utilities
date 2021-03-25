@@ -44,6 +44,15 @@ Function Set-VC-env {
     Enter-VsDevShell -VsInstallPath "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community" `
         -DevCmdArguments "-arch=x64 -host_arch=x64" -SkipAutomaticLocation
 }
+Function Get-Elevate-Command ($Command){
+    if (([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){
+        return $false
+    }
+    else{
+        Start-Process pwsh -Verb RunAs -ArgumentList "-Command "".$PROFILE.CurrentUserAllHosts $Command"" "
+        return $true
+    }
+}
 <#
 Function Update-VC-env {
     Start-Process pwsh.exe -UseNewEnvironment -Wait -NoNewWindow `
