@@ -15,6 +15,8 @@ Register-ArgumentCompleter -Native -CommandName winget -ScriptBlock {
 #以下用于vcpkg
 if (Test-Path F:\) { Import-Module 'F:\vcpkg\vcpkg\scripts\posh-vcpkg' }
 
+#以下设置WSL
+function trans {wsl trans @args}
 #以下设置Host
 $HostsFile = "$env:windir\System32\drivers\etc\hosts"
 
