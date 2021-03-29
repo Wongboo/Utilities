@@ -4,6 +4,6 @@ $env:PSModulePath += ":$env:OLDPWD/Documents/PowerShell/Modules"
 
 #以下设置Host
 $HostsFile = "/etc/hosts"
-Function Clear-DnsClientCache{
+function Clear-DnsClientCache{
     /etc/init.d/network restart
 }

@@ -1,6 +1,6 @@
 #不要用ShouldProcess
 #设置python环境
-Function Update-Pip {
+function Update-Pip {
     pip list --outdated | Select-Object -Skip 2 | ForEach-Object { pip install -U $_.Split([char]' ', 2)[0] }
 }
 
@@ -10,7 +10,7 @@ Set-PoshPrompt -Theme $HOME\.oh-my-posh.omp.json
 #设置PSreadline
 Import-Module PSReadLine
 #设置option是为了vi-mode
-Function OnViModeChange {
+function OnViModeChange {
     if ($args[0] -ceq 'Command') {
         #Set the cursor to a blinking block.
         Write-Host -NoNewline "`e[1 q"
@@ -34,7 +34,7 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
     }
 }
 
-Function Edit-Hosts {
+function Edit-Hosts {
     [ValidateSet("CommentAll", "UnCommentAll", "Normal")]
     [string]$CommentType = "Normal"
     switch -Exact ($CommentType) {
@@ -46,14 +46,14 @@ Function Edit-Hosts {
 }
 function Get-Hosts ([string]$URL) {
     $HTML = (curl -L --silent "https://www.ipaddress.com/search/$URL") | Out-String
-    if (-not $?) {
+    if ($LASTEXITCODE) {
         throw "Curl错误"
     }
     $Start = $HTML.IndexOf("ipv4/") + 5
     $Length = $HTML.IndexOfAny([char[]]('\', '"'), $Start) - $Start
     return $HTML.Substring($Start, $Length)
 }
-Function Update-Hosts ([switch]$OutVariable) {
+function Update-Hosts ([switch]$OutVariable) {
     #需要Administrator
     If (-not $OutVariable -and (Get-Elevate-Command "Update-Hosts")) {
         return
@@ -67,8 +67,9 @@ Function Update-Hosts ([switch]$OutVariable) {
             try {
                 (Get-Hosts $URL).PadLeft(15) + "    " + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
             }
-            catch [System.Management.Automation.ErrorRecord] {
-                Write-Output "Curl错误：$URL" ; $Line
+            catch [System.Management.Automation.ErrorRecord]{
+                Write-Output "Curl错误：$URL" 
+                $Line
             }
         }
         else {
@@ -84,13 +85,13 @@ Function Update-Hosts ([switch]$OutVariable) {
     Clear-DnsClientCache | Out-Null
 }
 #MacOS残留的.DS_Store, ._*可以用该函数删除
-Function Remove-DS-Store {
+function Remove-DS-Store {
     Get-ChildItem -Recurse -Include ._*, .DS_Store -Force @args | Remove-Item -Force
 }
-Function Calculator {
+function Calculator {
     ipython -i -c "from math import *; from numpy import *; from scipy import *; from sympy import *" @args
 }
-Function Set-Proxy {
+function Set-Proxy {
     [CmdletBinding(DefaultParameterSetName = 'Server')]
     param (
         [Parameter(ParameterSetName = 'Server', Position = 0)]
@@ -107,7 +108,7 @@ Function Set-Proxy {
     }
     $env:ALL_PROXY = $env:HTTP_PROXY = $env:HTTPS_PROXY = $Server
 }
-Function Get-GNU-Date {
+function Get-GNU-Date {
     #需要中文locale
     $str = (Get-Date -Format "yyyy年MM月dd日 dddd HH时mm分ss秒 CST").ToCharArray()
     if ($str[5] -ceq '0') { $str[5] = ' ' }
@@ -115,7 +116,7 @@ Function Get-GNU-Date {
     -join $str
 }
 #解决Get-Childitem不能获知文件夹大小的问题
-Function Get-ChildSize {
+function Get-ChildSize {
     Get-ChildItem @args -Force |
     ForEach-Object -Parallel {
         #Onedrive为reparsepoint，却非symlink，若需改
@@ -132,17 +133,17 @@ Function Get-ChildSize {
         $_ | Select-Object Mode, LastWriteTime, @{Name = "LengthOrTarget"; Expression = { $LengthOrTarget } }, Name
     }
 }
-Function Update-PowerShell {
+function Update-PowerShell {
     Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -Preview$($IsWindows ? ' -UseMSI' : '')"
 }
-Function Remove-OutdatedModule {
+function Remove-OutdatedModule {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     Get-ChildItem $env:PSModulePath.Split([char]($IsWindows ? ';' : ':'), 2)[0] | ForEach-Object {
         Get-ChildItem $_ | Sort-Object { [version]$_.Name } -Descending | Select-Object -Skip 1 | Remove-Item -Force -Recurse
     }
 }
-Function Get-TS-Translated {
+function Get-TS-Translated {
     param (
         [Parameter(Position = 0)]
         [string]$ts,

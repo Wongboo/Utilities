@@ -3,16 +3,16 @@
 
 #以下设置Host
 $HostsFile = "/etc/hosts"
-Function Clear-DnsClientCache {
+function Clear-DnsClientCache {
     zsh -c -f "sudo killall -HUP mDNSResponder"
 }
-Function Get-BrewDeps {
+function Get-BrewDeps {
     $s = brew deps --installed --formula
     $t = $s | ForEach-Object { $_.Split(':', 2)[0] }
     $l = $s | ForEach-Object { $_.Split(':', 2)[1].Split(' ') | ForEach-Object { $_ } } | Select-Object -Unique
     $t | ForEach-Object { if (-not $l.Contains($_)) { $_ } } 
 }
-Function Update-All([switch]$Sudo){
+function Update-All([switch]$Sudo){
     Write-Output "brew升级"
     brew upgrade
     Write-Output "pip升级"
@@ -29,11 +29,11 @@ Function Update-All([switch]$Sudo){
         sudo tlmgr update --all --self
     }
 }
-Function Update-tlmgr-fonts {
+function Update-tlmgr-fonts {
     sudo tlmgr conf texmf OSFONTDIR (Get-ChildItem (Get-Item /System/Library/Assets*) *Font*)
 }
 
-Function Get-Elevate-Command ($Command){
+function Get-Elevate-Command ($Command){
     if ($env:USER -eq "root"){
         return $false
     }
