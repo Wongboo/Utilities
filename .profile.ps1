@@ -50,19 +50,20 @@ function Get-Hosts ([string]$URL) {
 function Update-Hosts {
     [CmdletBinding()]
     param (
-        [ValidateSet("CommentAll", "UncommentAll")]
-        [string]$CommentType,
+        [Parameter(Position = 0)]
+        [ValidateSet("CommentAll", "UncommentAll", "Normal")]
+        [string]$CommentType = "Normal",
         [switch]$NoEditing
     )
     #需要Administrator
-    If (-not $NoEditing -and (Get-Elevate-Command "Update-Hosts")) {
+    If (-not $NoEditing -and (Get-Elevate-Command "Update-Hosts $CommentType")) {
         return
     }
 
     switch -Exact ($CommentType) {
         "CommentAll" { $Content = Get-Content $HostsFile | ForEach-Object {"#$_"} }
         "UncommentAll" { $Content = Get-Content $HostsFile | ForEach-Object {$_.Remove(0, 1)} }
-        Default {Get-Content $HostsFile | ForEach-Object {
+        "Normal" {Get-Content $HostsFile | ForEach-Object {
             $Line = $_
             $SplitComment = $Line.Split([char]"#", 2)
             $URL = $SplitComment[0].Split([char[]](" ", "`t"), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
