@@ -61,25 +61,26 @@ function Update-Hosts {
     }
 
     switch -Exact ($CommentType) {
-        "CommentAll" { $Content = Get-Content $HostsFile | ForEach-Object {"#$_"} }
-        "UncommentAll" { $Content = Get-Content $HostsFile | ForEach-Object {$_.Remove(0, 1)} }
-        "Normal" {Get-Content $HostsFile | ForEach-Object {
-            $Line = $_
-            $SplitComment = $Line.Split([char]"#", 2)
-            $URL = $SplitComment[0].Split([char[]](" ", "`t"), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
-            if ($URL -and $URL -cnotmatch "host") {
-                try {
-                    (Get-Hosts $URL).PadLeft(15) + "    " + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
+        "CommentAll" { $Content = Get-Content $HostsFile | ForEach-Object { "#$_" } }
+        "UncommentAll" { $Content = Get-Content $HostsFile | ForEach-Object { $_.StartsWith([char]'#') ? $_.Remove(0, 1) : $_ } }
+        "Normal" {
+            Get-Content $HostsFile | ForEach-Object {
+                $Line = $_
+                $SplitComment = $Line.Split([char]"#", 2)
+                $URL = $SplitComment[0].Split([char[]](" ", "`t"), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
+                if ($URL -and $URL -cnotmatch "host") {
+                    try {
+                        (Get-Hosts $URL).PadLeft(15) + "    " + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
+                    }
+                    catch [System.Management.Automation.ErrorRecord] {
+                        Write-Output "Curl错误：$URL" 
+                        $Line
+                    }
                 }
-                catch [System.Management.Automation.ErrorRecord]{
-                    Write-Output "Curl错误：$URL" 
+                else {
                     $Line
-                }
-            }
-            else {
-                $Line
-            }}
-    }
+                } }
+        }
     }
 
     if ($NoEditing) {
@@ -152,7 +153,7 @@ function Get-TS-Translated {
     param (
         [Parameter(Position = 0)]
         [string]$ts,
-        [string]$lang="zh",
+        [string]$lang = "zh",
         [ValidateSet("google", "bing", "yandex", "apertium")] 
         [string]$engine = "bing"
     )
