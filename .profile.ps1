@@ -61,7 +61,7 @@ function Update-Hosts {
     }
 
     switch -Exact ($CommentType) {
-        "CommentAll" { $Content = Get-Content $HostsFile | ForEach-Object { "#$_" } }
+        "CommentAll" { $Content = Get-Content $HostsFile | ForEach-Object { $_.Split([char]"#", 2)[0] -cnotmatch "host" ? "#$_" : $_ } }
         "UncommentAll" { $Content = Get-Content $HostsFile | ForEach-Object { $_.StartsWith([char]'#') ? $_.Remove(0, 1) : $_ } }
         "Normal" {
             Get-Content $HostsFile | ForEach-Object {
