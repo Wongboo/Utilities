@@ -29,13 +29,20 @@ Write-Host -NoNewline "`e[5 q"
 # PowerShell parameter completion shim for the dotnet CLI
 Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
     param($commandName, $wordToComplete, $cursorPosition)
-        dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object {
-           [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
-        }
+    dotnet complete --position $cursorPosition "$wordToComplete" | ForEach-Object {
+        [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterValue', $_)
+    }
 }
 
 Function Edit-Hosts {
-    code $HostsFile --wait && Clear-DnsClientCache | Out-Null
+    [ValidateSet("CommentAll", "UnCommentAll", "Normal")]
+    [string]$CommentType = "Normal"
+    switch -Exact ($CommentType) {
+        "CommentAll" {}
+        "UnCommentAll" {}
+        "Normal" { code $HostsFile --wait }
+    }
+    Clear-DnsClientCache | Out-Null
 }
 function Get-Hosts ([string]$URL) {
     $HTML = (curl -L --silent "https://www.ipaddress.com/search/$URL") | Out-String
@@ -48,7 +55,7 @@ function Get-Hosts ([string]$URL) {
 }
 Function Update-Hosts ([switch]$OutVariable) {
     #需要Administrator
-    If (-not $OutVariable -and (Get-Elevate-Command "Update-Hosts")){
+    If (-not $OutVariable -and (Get-Elevate-Command "Update-Hosts")) {
         return
     }
 
@@ -57,8 +64,8 @@ Function Update-Hosts ([switch]$OutVariable) {
         $SplitComment = $Line.Split([char]"#", 2)
         $URL = $SplitComment[0].Split([char[]](" ", "`t"), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
         if ($URL -and $URL -cnotmatch "host") {
-            try{
-            (Get-Hosts $URL).PadLeft(15) + "    " + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
+            try {
+                (Get-Hosts $URL).PadLeft(15) + "    " + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
             }
             catch [System.Management.Automation.ErrorRecord] {
                 Write-Output "Curl错误：$URL" ; $Line
@@ -134,4 +141,29 @@ Function Remove-OutdatedModule {
     Get-ChildItem $env:PSModulePath.Split([char]($IsWindows ? ';' : ':'), 2)[0] | ForEach-Object {
         Get-ChildItem $_ | Sort-Object { [version]$_.Name } -Descending | Select-Object -Skip 1 | Remove-Item -Force -Recurse
     }
+}
+Function Get-TS-Translated {
+    param (
+        [Parameter(Position = 0)]
+        [string]$ts,
+        [string]$lang="zh",
+        [ValidateSet("google", "bing", "yandex", "apertium")] 
+        [string]$engine = "bing"
+    )
+    lconvert -if ts -of po -o temp.po $ts
+    $po = Get-Content temp.po
+    for ($i = 0; $i -lt $po.Count; $i++) {
+        if ($po[$i].StartsWith("msgid")) {
+            $sentence = $po[$i].Split([char]'"', 3)[1]
+            $translated = trans -brief """$sentence""" -e $engine -t $lang
+            $translated
+            while ($translated.StartsWith("Did you mean:")) {
+                $translated = trans -brief """$($translated.Substring(13))""" 
+            }
+            $po[++$i] = "msgstr """ + $translated + """"
+        }
+    }
+    Set-Content temp.po $po
+    lconvert -if po -of ts -o $ts temp.po
+    #Remove-Item ./temp.po
 }
