@@ -35,13 +35,7 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
 }
 
 function Edit-Hosts {
-    [ValidateSet("CommentAll", "UnCommentAll", "Normal")]
-    [string]$CommentType = "Normal"
-    switch -Exact ($CommentType) {
-        "CommentAll" {}
-        "UnCommentAll" {}
-        "Normal" { code $HostsFile --wait }
-    }
+    code $HostsFile --wait 
     Clear-DnsClientCache | Out-Null
 }
 function Get-Hosts ([string]$URL) {
@@ -53,31 +47,41 @@ function Get-Hosts ([string]$URL) {
     $Length = $HTML.IndexOfAny([char[]]('\', '"'), $Start) - $Start
     return $HTML.Substring($Start, $Length)
 }
-function Update-Hosts ([switch]$OutVariable) {
+function Update-Hosts {
+    [CmdletBinding()]
+    param (
+        [ValidateSet("CommentAll", "UncommentAll")]
+        [string]$CommentType,
+        [switch]$NoEditing
+    )
     #需要Administrator
-    If (-not $OutVariable -and (Get-Elevate-Command "Update-Hosts")) {
+    If (-not $NoEditing -and (Get-Elevate-Command "Update-Hosts")) {
         return
     }
 
-    $Content = Get-Content $HostsFile | ForEach-Object {
-        $Line = $_
-        $SplitComment = $Line.Split([char]"#", 2)
-        $URL = $SplitComment[0].Split([char[]](" ", "`t"), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
-        if ($URL -and $URL -cnotmatch "host") {
-            try {
-                (Get-Hosts $URL).PadLeft(15) + "    " + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
+    switch -Exact ($CommentType) {
+        "CommentAll" { $Content = Get-Content $HostsFile | ForEach-Object {"#$_"} }
+        "UncommentAll" { $Content = Get-Content $HostsFile | ForEach-Object {$_.Remove(0, 1)} }
+        Default {Get-Content $HostsFile | ForEach-Object {
+            $Line = $_
+            $SplitComment = $Line.Split([char]"#", 2)
+            $URL = $SplitComment[0].Split([char[]](" ", "`t"), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
+            if ($URL -and $URL -cnotmatch "host") {
+                try {
+                    (Get-Hosts $URL).PadLeft(15) + "    " + $URL + ($SplitComment[1] ? " `t#" + $SplitComment[1] : "")
+                }
+                catch [System.Management.Automation.ErrorRecord]{
+                    Write-Output "Curl错误：$URL" 
+                    $Line
+                }
             }
-            catch [System.Management.Automation.ErrorRecord]{
-                Write-Output "Curl错误：$URL" 
+            else {
                 $Line
-            }
-        }
-        else {
-            $Line
-        }
+            }}
+    }
     }
 
-    if ($OutVariable) {
+    if ($NoEditing) {
         return $Content
     }
     
