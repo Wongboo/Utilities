@@ -19,7 +19,7 @@ function Update-All([switch]$Sudo){
     Update-Pip
     Write-Output "zsh升级"
     #env ZSH="$ZSH" sh "$ZSH/tools/upgrade.sh"
-    git -C ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k pull
+    git -C $HOME/.oh-my-zsh/custom/themes/powerlevel10k pull
     Write-Output "rust升级"
     rustup update
     Write-Output "pwsh module升级"

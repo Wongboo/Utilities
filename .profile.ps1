@@ -64,7 +64,7 @@ function Update-Hosts {
         "CommentAll" { $Content = Get-Content $HostsFile | ForEach-Object { $_.Split([char]"#", 2)[0] -cnotmatch "host" ? "#$_" : $_ } }
         "UncommentAll" { $Content = Get-Content $HostsFile | ForEach-Object { $_.StartsWith([char]'#') ? $_.Remove(0, 1) : $_ } }
         "Normal" {
-            Get-Content $HostsFile | ForEach-Object {
+            $Content = Get-Content $HostsFile | ForEach-Object {
                 $Line = $_
                 $SplitComment = $Line.Split([char]"#", 2)
                 $URL = $SplitComment[0].Split([char[]](" ", "`t"), 2, [System.StringSplitOptions]::RemoveEmptyEntries)[1]
@@ -160,8 +160,9 @@ function Get-TS-Translated {
     lconvert -if ts -of po -o temp.po $ts
     $po = Get-Content temp.po
     for ($i = 0; $i -lt $po.Count; $i++) {
-        if ($po[$i].StartsWith("msgid")) {
+        if ($po[$i].StartsWith("msgid") -and -not $po[$i + 1].Split([char]'"', 3)[1]) {
             $sentence = $po[$i].Split([char]'"', 3)[1]
+            if (-not $sentence) { continue }
             $translated = trans -brief """$sentence""" -e $engine -t $lang
             $translated
             while ($translated.StartsWith("Did you mean:")) {
