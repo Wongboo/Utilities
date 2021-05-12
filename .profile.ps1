@@ -1,7 +1,7 @@
 #不要用ShouldProcess
 #设置python环境
-function Update-Pip {
-    pip list --outdated | Select-Object -Skip 2 | ForEach-Object { pip install -U $_.Split([char]' ', 2)[0] }
+Function Update-Pip {
+    pip list --outdated --format=freeze | ForEach-Object { pip install -U $_.Split("==",2)[0] }
 }
 
 Import-Module posh-git, oh-my-posh
@@ -10,7 +10,7 @@ Set-PoshPrompt -Theme $HOME\.oh-my-posh.omp.json
 #设置PSreadline
 Import-Module PSReadLine
 #设置option是为了vi-mode
-function OnViModeChange {
+Function OnViModeChange {
     if ($args[0] -ceq 'Command') {
         #Set the cursor to a blinking block.
         Write-Host -NoNewline "`e[1 q"
@@ -34,11 +34,11 @@ Register-ArgumentCompleter -Native -CommandName dotnet -ScriptBlock {
     }
 }
 
-function Edit-Hosts {
+Function Edit-Hosts {
     code $HostsFile --wait 
     Clear-DnsClientCache | Out-Null
 }
-function Get-Hosts ([string]$URL) {
+Function Get-Hosts ([string]$URL) {
     $HTML = (curl -L --silent "https://www.ipaddress.com/search/$URL") | Out-String
     if ($LASTEXITCODE) {
         throw "Curl错误"
@@ -47,7 +47,7 @@ function Get-Hosts ([string]$URL) {
     $Length = $HTML.IndexOfAny([char[]]('\', '"'), $Start) - $Start
     return $HTML.Substring($Start, $Length)
 }
-function Update-Hosts {
+Function Update-Hosts {
     [CmdletBinding()]
     param (
         [Parameter(Position = 0)]
@@ -91,13 +91,13 @@ function Update-Hosts {
     Clear-DnsClientCache | Out-Null
 }
 #MacOS残留的.DS_Store, ._*可以用该函数删除
-function Remove-DS-Store {
+Function Remove-DS-Store {
     Get-ChildItem -Recurse -Include ._*, .DS_Store -Force @args | Remove-Item -Force
 }
-function Calculator {
+Function Calculator {
     ipython -i -c "from math import *; from numpy import *; from scipy import *; from sympy import *" @args
 }
-function Set-Proxy {
+Function Set-Proxy {
     [CmdletBinding(DefaultParameterSetName = 'Server')]
     param (
         [Parameter(ParameterSetName = 'Server', Position = 0)]
@@ -114,7 +114,7 @@ function Set-Proxy {
     }
     $env:ALL_PROXY = $env:HTTP_PROXY = $env:HTTPS_PROXY = $Server
 }
-function Get-GNU-Date {
+Function Get-GNU-Date {
     #需要中文locale
     $str = (Get-Date -Format "yyyy年MM月dd日 dddd HH时mm分ss秒 CST").ToCharArray()
     if ($str[5] -ceq '0') { $str[5] = ' ' }
@@ -122,7 +122,7 @@ function Get-GNU-Date {
     -join $str
 }
 #解决Get-Childitem不能获知文件夹大小的问题
-function Get-ChildSize {
+Function Get-ChildSize {
     Get-ChildItem @args -Force |
     ForEach-Object -Parallel {
         #Onedrive为reparsepoint，却非symlink，若需改
@@ -139,17 +139,17 @@ function Get-ChildSize {
         $_ | Select-Object Mode, LastWriteTime, @{Name = "LengthOrTarget"; Expression = { $LengthOrTarget } }, Name
     }
 }
-function Update-PowerShell {
+Function Update-PowerShell {
     Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -Preview$($IsWindows ? ' -UseMSI' : '')"
 }
-function Remove-OutdatedModule {
+Function Remove-OutdatedModule {
     [CmdletBinding(SupportsShouldProcess)]
     param()
     Get-ChildItem $env:PSModulePath.Split([char]($IsWindows ? ';' : ':'), 2)[0] | ForEach-Object {
         Get-ChildItem $_ | Sort-Object { [version]$_.Name } -Descending | Select-Object -Skip 1 | Remove-Item -Force -Recurse
     }
 }
-function Get-TS-Translated {
+Function Get-TS-Translated {
     param (
         [Parameter(Position = 0)]
         [string]$ts,

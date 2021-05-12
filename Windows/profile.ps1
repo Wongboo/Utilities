@@ -27,17 +27,21 @@ Function Update-All {
             /update user displaylevel=false forceappshutdown=true }
     Start-Process ms-settings:windowsupdate-action
     Start-Process ms-windows-store://downloadsandupdates
-    Write-Host "powershell module升级"
+    Write-Output "powershell module升级"
     Update-Module -Proxy "http://127.0.0.1:1087"
-    Write-Host "pip升级"
+    Write-Output "pip升级"
     Update-Pip
     if (Test-Path F:\) {
-        Write-Host "vcpkg升级"
+        Write-Output "vcpkg升级"
         git -C "F:\vcpkg\vcpkg" pull #| Out-Null
         vcpkg update
-        Write-Host "texlive升级"
+        Write-Output "texlive升级"
         tlmgr update --self --all
-        Write-Host "WSL升级 ..."
+        Write-Output "rust升级"
+        $env:RUSTUP_DIST_SERVER="https://mirrors.ustc.edu.cn/rust-static"
+        $env:RUSTUP_UPDATE_ROOT="https://mirrors.ustc.edu.cn/rust-static/rustup"
+        rustup self update && rustup update
+        Write-Output "WSL升级 ..."
         wsl update
     }
 }
