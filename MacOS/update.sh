@@ -23,7 +23,7 @@ if [ -n "$1" ] && [ "$1" != "notex" ]; then
     echo rust upgrade ...
     rustup update
     echo pwsh module upgrade ...
-    pwsh-preview -c "Update-Module"
+    pwsh -c "Update-Module"
 fi
 
 # update

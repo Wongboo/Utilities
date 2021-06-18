@@ -38,7 +38,7 @@ function Get-Elevate-Command ($Command){
         return $false
     }
     else{
-        sudo pwsh-preview -c "$Command"
+        sudo pwsh -c "$Command"
         return $true
     }
 }
