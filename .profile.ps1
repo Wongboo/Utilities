@@ -5,7 +5,7 @@ Function Update-Pip {
 }
 
 Import-Module posh-git, oh-my-posh
-Set-PoshPrompt -Theme $HOME\.oh-my-posh.omp.json
+Set-PoshPrompt -Theme gmay
 
 #设置PSreadline
 Import-Module PSReadLine

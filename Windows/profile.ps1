@@ -31,6 +31,8 @@ Function Update-All {
     Update-Module -Proxy "http://127.0.0.1:1087"
     Write-Output "pip升级"
     Update-Pip
+    Write-Output "winget升级"
+    wt -w 0 nt pwsh -noe -c winget upgrade
     if (Test-Path F:\) {
         Write-Output "vcpkg升级"
         git -C "F:\vcpkg\vcpkg" pull #| Out-Null
